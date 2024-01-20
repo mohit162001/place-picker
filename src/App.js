@@ -8,12 +8,15 @@ import logoImg from "./assets/logo.png";
 import { sortPlacesByDistance } from "./loc.js";
 
 function App() {
-  const modal = useRef();
+
   const selectedPlace = useRef();
+  const [modalOpen,setModalOpen] = useState(false);
   const [availablePlaces, setAvailablePlaces] = useState([]);
-  const [pickedPlaces, setPickedPlaces] = useState([]);
+  const [pickedPlaces, setPickedPlaces] = useState(selectedPlace);
 
-
+  useEffect(()=>{
+    
+  },[]);
   useEffect(() => {
     navigator.geolocation.getCurrentPosition((position) => {
       const sortedPlaces = sortPlacesByDistance(
@@ -23,15 +26,19 @@ function App() {
       );
       setAvailablePlaces(sortedPlaces);
     });
+    const storeIds = JSON.parse(localStorage.getItem('selectedPlaces')) || [];
+    const selectedPlace = storeIds.map((id)=>AVAILABLE_PLACES.find((place)=>place.id===id))
+    console.log(selectedPlace)
+    setPickedPlaces(selectedPlace);
   }, []);
 
   function handleStartRemovePlace(id) {
-    modal.current.open();
+    setModalOpen(true);
     selectedPlace.current = id;
   }
 
   function handleStopRemovePlace() {
-    modal.current.close();
+    setModalOpen(false);
   }
 
   function handleSelectPlace(id) {
@@ -44,7 +51,7 @@ function App() {
     });
 
     const storeIds = JSON.parse(localStorage.getItem('selectedPlaces')) || [];
-    if(storeIds.indexOf(id === -1)){
+    if(storeIds.indexOf(id)===-1){
       localStorage.setItem('selectedPlaces',JSON.stringify([...storeIds,id, ]))
     }
   }
@@ -53,13 +60,15 @@ function App() {
     setPickedPlaces((prevPickedPlaces) =>
       prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
     );
-    modal.current.close();
+    const storeIds = JSON.parse(localStorage.getItem('selectedPlaces')) || [];
+    localStorage.setItem('selectedPlaces',JSON.stringify(storeIds.filter((id)=> id!==selectedPlace.current)))
+    setModalOpen(false);
   }
 
   return (
     <>
-      <Modal ref={modal}>
-        <DeleteConfirmation
+      <Modal open={modalOpen} onClose = {handleStopRemovePlace}>
+        <DeleteConfirmation opne={modalOpen}
           onCancel={handleStopRemovePlace}
           onConfirm={handleRemovePlace}
         />
